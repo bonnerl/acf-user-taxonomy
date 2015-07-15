@@ -36,7 +36,7 @@ class acf_field_user_taxonomy extends acf_field {
 		*  category (string) basic | content | choice | relational | jquery | layout | CUSTOM GROUP NAME
 		*/
 		
-		$this->category = 'basic';
+		$this->category = 'relational';
 		
 		
 		/*
@@ -44,7 +44,8 @@ class acf_field_user_taxonomy extends acf_field {
 		*/
 		
 		$this->defaults = array(
-			'font_size'	=> 14,
+			'taxonomy' => '',
+			'allow_null' => 0,
 		);
 		
 		
@@ -78,23 +79,22 @@ class acf_field_user_taxonomy extends acf_field {
 	*/
 	
 	function render_field_settings( $field ) {
-		
-		/*
-		*  acf_render_field_setting
-		*
-		*  This function will create a setting for your field. Simply pass the $field parameter and an array of field settings.
-		*  The array of settings does not require a `value` or `prefix`; These settings are found from the $field array.
-		*
-		*  More than one setting can be added by copy/paste the above code.
-		*  Please note that you must also have a matching $defaults value for the field name (font_size)
-		*/
-		
+				
+		// Add option to select taxonomy used for field
 		acf_render_field_setting( $field, array(
-			'label'			=> __('Font Size','acf-user-taxonomy'),
-			'instructions'	=> __('Customise the input font size','acf-user-taxonomy'),
-			'type'			=> 'number',
-			'name'			=> 'font_size',
-			'prepend'		=> 'px',
+			'label'			=> __('User Taxonomy','acf'),
+			'instructions'	=> __('Select the taxonomy to be displayed','acf'),
+			'type'			=> 'select',
+			'name'			=> 'taxonomy',
+			'choices'		=> acf_get_taxonomies(),
+		));
+
+		// Allow field to not be set.
+		acf_render_field_setting( $field, array(
+			'label'			=> __('Allow Null','acf'),
+			'instructions'	=> '',
+			'type'			=> 'true_false',
+			'name'			=> 'allow_null'
 		));
 
 	}
@@ -117,26 +117,26 @@ class acf_field_user_taxonomy extends acf_field {
 	*/
 	
 	function render_field( $field ) {
-		
-		
-		/*
-		*  Review the data of $field.
-		*  This will show what data is available
-		*/
-		
-		echo '<pre>';
-			print_r( $field );
-		echo '</pre>';
-		
-		
-		/*
-		*  Create a simple text input using the 'font_size' setting.
-		*/
-		
+		// Get terms for the field's taxonomy.
+		$terms = get_terms('user-region', [
+			'hide_empty'        => false, 
+			'exclude'           => array(), 
+			'include'           => array()
+			] );
 		?>
-		<input type="text" name="<?php echo esc_attr($field['name']) ?>" value="<?php echo esc_attr($field['value']) ?>" style="font-size:<?php echo $field['font_size'] ?>px;" />
+		<select name="<?php echo esc_attr($field['name']) ?>" id="">
+			<?php if ( $field['allow_null'] ): ?>
+				<option value=""<?php if ( $field['value'] == '' ) echo ' selected="selected"' ?>>N/A</option>
+			<?php endif ?>
+			<?php foreach ( $terms as $term ) :
+				$selected = ( $field['value'] == $term->term_id ) ? ' selected="selected"' : '';
+				?>
+				<option value="<?php echo $term->term_id ?>"<?php echo $selected ?>><?php echo $term->name ?></option>
+			<?php endforeach; ?>
+		</select>
 		<?php
 	}
+	
 	
 		
 	/*
@@ -173,7 +173,6 @@ class acf_field_user_taxonomy extends acf_field {
 	}
 	
 	*/
-	
 	
 	/*
 	*  input_admin_head()

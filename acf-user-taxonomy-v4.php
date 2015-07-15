@@ -21,11 +21,10 @@ class acf_field_user_taxonomy extends acf_field {
 		// vars
 		$this->name = 'user_taxonomy';
 		$this->label = __('User Taxonomy');
-		$this->category = __("Basic",'acf'); // Basic, Content, Choice, etc
+		$this->category = __("Relational",'acf'); // Basic, Content, Choice, etc
 		$this->defaults = array(
-			// add default here to merge into your field. 
-			// This makes life easy when creating the field options as you don't need to use any if( isset('') ) logic. eg:
-			//'preview_size' => 'thumbnail'
+			'taxonomy' => '',
+			'allow_null' => 0,
 		);
 		
 		
@@ -58,34 +57,44 @@ class acf_field_user_taxonomy extends acf_field {
 	
 	function create_options( $field )
 	{
-		// defaults?
-		/*
+
 		$field = array_merge($this->defaults, $field);
-		*/
 		
 		// key is needed in the field names to correctly save the data
 		$key = $field['name'];
-		
 		
 		// Create Field Options HTML
 		?>
 <tr class="field_option field_option_<?php echo $this->name; ?>">
 	<td class="label">
-		<label><?php _e("Preview Size",'acf'); ?></label>
-		<p class="description"><?php _e("Thumbnail is advised",'acf'); ?></p>
+		<label><?php _e("User Taxonomy",'acf'); ?></label>
+		<p class="description"><?php _e("Select the taxonomy to be displayed",'acf'); ?></p>
 	</td>
 	<td>
 		<?php
-		
+
 		do_action('acf/create_field', array(
-			'type'		=>	'radio',
-			'name'		=>	'fields['.$key.'][preview_size]',
-			'value'		=>	$field['preview_size'],
-			'layout'	=>	'horizontal',
-			'choices'	=>	array(
-				'thumbnail' => __('Thumbnail'),
-				'something_else' => __('Something Else'),
-			)
+			'type'		=>	'select',
+			'name'		=>	'fields['.$key.'][taxonomy]',
+			'value'		=>	$field['taxonomy'],
+			'choices'		=> acf_get_taxonomies(),
+		));
+		
+		?>
+	</td>
+</tr>
+<tr class="field_option field_option_<?php echo $this->name; ?>">
+	<td class="label">
+		<label><?php _e("Allow Null",'acf'); ?></label>
+		<p class="description"></p>
+	</td>
+	<td>
+		<?php
+
+		do_action('acf/create_field', array(
+			'type'		=>	'true_false',
+			'name'		=>	'fields['.$key.'][allow_null]',
+			'value'		=>	$field['allow_null'],
 		));
 		
 		?>
@@ -110,19 +119,23 @@ class acf_field_user_taxonomy extends acf_field {
 	
 	function create_field( $field )
 	{
-		// defaults?
-		/*
-		$field = array_merge($this->defaults, $field);
-		*/
-		
-		// perhaps use $field['preview_size'] to alter the markup?
-		
-		
-		// create Field HTML
+		// Get terms for the field's taxonomy.
+		$terms = get_terms('user-region', [
+			'hide_empty'        => false, 
+			'exclude'           => array(), 
+			'include'           => array()
+			] );
 		?>
-		<div>
-			
-		</div>
+		<select name="<?php echo esc_attr($field['name']) ?>" id="">
+			<?php if ( $field['allow_null'] ): ?>
+				<option value=""<?php if ( $field['value'] == '' ) echo ' selected="selected"' ?>>N/A</option>
+			<?php endif ?>
+			<?php foreach ( $terms as $term ) :
+				$selected = ( $field['value'] == $term->term_id ) ? ' selected="selected"' : '';
+				?>
+				<option value="<?php echo $term->term_id ?>"<?php echo $selected ?>><?php echo $term->name ?></option>
+			<?php endforeach; ?>
+		</select>
 		<?php
 	}
 	
