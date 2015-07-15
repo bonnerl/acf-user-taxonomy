@@ -120,7 +120,7 @@ class acf_field_user_taxonomy extends acf_field {
 	function create_field( $field )
 	{
 		// Get terms for the field's taxonomy.
-		$terms = get_terms('user-region', [
+		$terms = get_terms($field['taxonomy'], [
 			'hide_empty'        => false, 
 			'exclude'           => array(), 
 			'include'           => array()
